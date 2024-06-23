@@ -1,0 +1,18 @@
+; RUN: %paren -c %s -o %t.obj
+; RUN: %cxx %t.obj -o %t.out
+; RUN: %t.out | FileCheck %s
+
+; CHECK: 123
+(prn 123)
+
+; CHECK: 3.14
+(prn 3.14)
+
+; CHECK: 6.02e+23
+(prn 6.02e+23)
+
+; CHECK: 3
+(prn (int 3.14))
+
+; CHECK: 123
+(prn (double 123))

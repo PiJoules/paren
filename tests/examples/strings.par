@@ -1,0 +1,21 @@
+; RUN: %paren -c %s -o %t.obj
+; RUN: %cxx %t.obj -o %t.out
+; RUN: %t.out | FileCheck %s
+
+; CHECK: 65
+(prn (char-at "A" 0))
+
+; CHECK: A
+(prn (chr 65))
+
+; CHECK: Hello, world!
+(prn "Hello, world!")
+
+; CHECK: Benjamin "Bugsy" Siegel
+(prn "Benjamin \"Bugsy\" Siegel")   ;; backslash is an escaping character
+
+; CHECK: Foo bar
+(prn "Foo\tbar\r\n") ;; includes C escapes: \t \r \n
+
+; CHECK: Hello world!
+(prn (strcat "Hello " "world!"))

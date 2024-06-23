@@ -1,0 +1,20 @@
+; RUN: %paren -c %s -o %t.obj
+; RUN: %cxx %t.obj -o %t.out
+; RUN: %t.out | FileCheck %s
+
+; CHECK: true
+(prn true)
+
+; CHECK: false
+(prn false)
+
+; CHECK: true
+(prn (! false))
+
+; CHECK: false
+; CHECK-NOT: NEVER PRINTED
+(prn (&& true false (prn "NEVER PRINTED")))
+
+; CHECK: true
+; CHECK-NOT: NEVER PRINTED
+(prn (|| false true (prn "NEVER PRINTED")))

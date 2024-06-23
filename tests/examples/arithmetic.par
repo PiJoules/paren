@@ -1,0 +1,24 @@
+; RUN: %paren -c %s -o %t.obj
+; RUN: %cxx %t.obj -o %t.out
+; RUN: %t.out | FileCheck %s
+
+; CHECK: 2
+(prn (+ 1 1))
+
+; CHECK: 7
+(prn (- 8 1))
+
+; CHECK: 20
+(prn (* 10 2))
+
+; CHECK: 8
+(prn (^ 2 3))
+
+; CHECK: 2
+(prn (/ 5 2))
+
+; CHECK: 1
+(prn (% 5 2))
+
+; CHECK: 2.5
+(prn (/ 5.0 2))

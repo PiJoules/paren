@@ -1,0 +1,10 @@
+import os
+
+from pathlib import Path
+
+config.src_root = r"@CMAKE_SOURCE_DIR@"
+config.build_root = r"@CMAKE_BINARY_DIR@"
+config.cxx = r"@CMAKE_CXX_COMPILER@"
+config.filecheck = r"@FILECHECK@"
+
+lit_config.load_config(config, Path(config.src_root) / "tests" / "lit.cfg.py")

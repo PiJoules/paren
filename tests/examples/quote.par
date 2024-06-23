@@ -1,0 +1,6 @@
+; RUN: %paren -c %s -o %t.obj
+; RUN: %cxx %t.obj -o %t.out
+; RUN: %t.out | FileCheck %s
+
+; CHECK: (+ 1 2)
+(prn (quote (+ 1 2)))
