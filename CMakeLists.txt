@@ -46,6 +46,7 @@ add_compile_options(
   -ffunction-sections -fdata-sections
 
   ${LLVM_CONFIG_CXX_FLAGS}
+  -std=c++20  # Ensure this comes after any -std=* flag from llvm-config flags
 
   -fsanitize=address -fsanitize=undefined)
 
