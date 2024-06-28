@@ -1,5 +1,7 @@
 # Paren
 
+![Build Status Sanitized w/Clang](https://github.com/PiJoules/paren/actions/workflows/build-sanitized-clang.yml/badge.svg)
+
 Forked and bootstrapped from the original [paren](https://bitbucket.org/ktg/paren/src/master/).
 
 ## Requirements

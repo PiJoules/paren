@@ -112,6 +112,11 @@ class Namespace {
     return *std::any_cast<T>(&found->second);
   }
 
+  template <typename T = std::string>
+  const T &operator[](std::string_view arg) const {
+    return get<T>(arg);
+  }
+
   // Short-hand notation for getting an argument with APPEND.
   const auto &getList(std::string_view arg) const {
     return get<std::vector<std::string>>(arg);

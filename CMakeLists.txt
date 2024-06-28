@@ -7,6 +7,9 @@ message(STATUS "CLANG_FORMAT: ${CLANG_FORMAT}")
 set(LLVM_CONFIG llvm-config CACHE STRING "llvm-config to use")
 message(STATUS "LLVM_CONFIG: ${LLVM_CONFIG}")
 
+set(FILECHECK FileCheck CACHE STRING "FileCheck to use")
+message(STATUS "FILECHECK: ${FILECHECK}")
+
 execute_process(COMMAND ${LLVM_CONFIG} --cxxflags OUTPUT_VARIABLE LLVM_CONFIG_CXX_FLAGS
   OUTPUT_STRIP_TRAILING_WHITESPACE)
 execute_process(COMMAND ${LLVM_CONFIG} --ldflags OUTPUT_VARIABLE LLVM_CONFIG_LD_FLAGS
@@ -36,6 +39,8 @@ add_compile_options(
   -g3
 
   -Wall -Werror -Wconversion
+
+  -ftrivial-auto-var-init=pattern
 
   -fno-exceptions -fno-rtti
   -ffunction-sections -fdata-sections

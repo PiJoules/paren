@@ -10,7 +10,7 @@ FetchContent_MakeAvailable(googletest)
 set(FILECHECK FileCheck CACHE STRING "FileCheck to use")
 message(STATUS "FileCheck: ${FileCheck}")
 
-add_executable(unittests
+add_executable(unittests EXCLUDE_FROM_ALL
   testargparse.cpp)
 target_link_libraries(unittests
   argparse

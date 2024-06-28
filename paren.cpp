@@ -39,6 +39,7 @@ struct GenericRAII {
   }
 
   T &operator*() { return ref; }
+  operator bool() const { return bool(ref); }
 
   T ref;
   Deleter deleter;
@@ -133,8 +134,14 @@ LLVMValueRef CreateMain(LLVMModuleRef mod, std::string_view contents,
   return main_func;
 }
 
-int Compile(std::string_view input_filename, std::string_view output_filename,
-            std::span<const std::string> imports) {
+enum class EmissionKind {
+  IR,
+  ASM,
+  Object,
+};
+
+int Compile(std::string_view input_filename, std::ostream &out,
+            EmissionKind emission, std::span<const std::string> imports = {}) {
   std::ifstream input(input_filename.data());
 
   LLVMInitializeX86TargetInfo();
@@ -180,20 +187,43 @@ int Compile(std::string_view input_filename, std::string_view output_filename,
     return -1;
   }
 
-  LLVMDumpModule(mod);
-
   failed = LLVMVerifyModule(mod, LLVMAbortProcessAction, &*error);
 
   if (failed)
     return -1;
 
-  failed =
-      LLVMTargetMachineEmitToFile(*target_machine, mod, output_filename.data(),
-                                  /*codegen=*/LLVMObjectFile, &*error);
-  if (failed)
-    return -1;
+  GenericRAII<LLVMMemoryBufferRef> outbuff(nullptr, [](auto x) {
+    if (x)
+      LLVMDisposeMemoryBuffer(x);
+  });
 
-  return 0;
+  switch (emission) {
+    case EmissionKind::IR: {
+      char *str = LLVMPrintModuleToString(mod);
+      out << str;
+      LLVMDisposeMessage(str);
+      break;
+    }
+    case EmissionKind::ASM:
+      failed = LLVMTargetMachineEmitToMemoryBuffer(*target_machine, mod,
+                                                   /*codegen=*/LLVMAssemblyFile,
+                                                   &*error, &*outbuff);
+      break;
+    case EmissionKind::Object:
+      failed = LLVMTargetMachineEmitToMemoryBuffer(*target_machine, mod,
+                                                   /*codegen=*/LLVMObjectFile,
+                                                   &*error, &*outbuff);
+      break;
+  }
+
+  if (outbuff) {
+    out.write(LLVMGetBufferStart(*outbuff),
+              static_cast<std::streamsize>(LLVMGetBufferSize(*outbuff)));
+  }
+
+  out.flush();
+
+  return failed ? -1 : 0;
 }
 
 }  // namespace
@@ -204,6 +234,10 @@ int main(int argc, char *argv[]) {
   argparser.AddOptArg("compile", 'c').setStoreTrue();
   argparser.AddOptArg("output", 'o');
   argparser.AddOptArg("import", 'i').setAppend().setDefaultList();
+
+  // TODO: This could be a mutually exclusive group.
+  argparser.AddOptArg("emit-llvm").setStoreTrue();
+  argparser.AddOptArg("emit-asm").setStoreTrue();
 
   auto args = argparser.ParseArgs(argc, argv);
   if (args.HelpIsSet()) {
@@ -221,9 +255,28 @@ int main(int argc, char *argv[]) {
 
   if (args.get<bool>("compile")) {
     assert(argc > 1);
-    std::string output_filename(
-        args.has("output") ? args.get("output") : args.get("input") + ".obj");
-    return Compile(args.get("input"), output_filename, args.getList("import"));
+
+    std::ofstream file_output;
+    std::ostream &out = [&]() -> std::ostream & {
+      if (!args.has("output")) {
+        file_output = std::ofstream(args.get("input") + ".obj");
+        return file_output;
+      }
+
+      if (args["output"] == "-")
+        return std::cout;
+
+      file_output = std::ofstream(args["output"]);
+      return file_output;
+    }();
+
+    EmissionKind kind{EmissionKind::Object};
+    if (args.get<bool>("emit-llvm"))
+      kind = EmissionKind::IR;
+    else if (args.get<bool>("emit-asm"))
+      kind = EmissionKind::ASM;
+
+    return Compile(args.get("input"), out, kind, args.getList("import"));
   }
 
   // execute files
